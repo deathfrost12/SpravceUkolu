@@ -1,0 +1,214 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Správce úkolů</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 0;
+            background-color: #f4f5f7;
+        }
+        .container {
+            width: 90%;
+            margin: 0 auto;
+            padding: 20px;
+        }
+        h1 {
+            text-align: center;
+            margin-bottom: 20px;
+        }
+        .board {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 20px;
+            justify-content: center;
+        }
+        .column {
+            background-color: #ffffff;
+            border-radius: 5px;
+            padding: 10px;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+            width: 23%;
+        }
+        .column h2 {
+            text-align: center;
+        }
+        .task {
+            background-color: #f4f5f7;
+            border-radius: 5px;
+            padding: 10px;
+            margin-bottom: 10px;
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+            text-align: center;
+            cursor: pointer;
+        }
+        .task h3 {
+            margin-top: 0;
+        }
+        .task p {
+            margin-bottom: 0;
+        }
+        .label {
+            display: inline-block;
+            padding: 2px 8px;
+            border-radius: 4px;
+            font-size: 12px;
+            margin-bottom: 5px;
+        }
+        .label-copywriting {
+            background-color: #e1bee7;
+        }
+        .label-uidesign {
+            background-color: #b3e5fc;
+        }
+        .label-illustration {
+            background-color: #c8e6c9;
+        }
+        .task-info {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            font-size: 12px;
+            color: #757575;
+        }
+        .task-info span {
+            display: flex;
+            align-items: center;
+            gap: 5px;
+        }
+        .task-info span i {
+            font-size: 14px;
+        }
+        .popup {
+            display: none;
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background-color: white;
+            padding: 20px;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+            border-radius: 10px;
+            z-index: 1000;
+            width: 300px;
+        }
+        .popup-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border-bottom: 1px solid #e0e0e0;
+            padding-bottom: 10px;
+            margin-bottom: 10px;
+        }
+        .popup-header h2 {
+            margin: 0 auto;
+            font-size: 18px;
+            text-align: center;
+}
+        .popup-close {
+            cursor: pointer;
+            font-size: 18px;
+        }
+        .popup-content {
+            text-align: center;
+        }
+        .popup-content p {
+            margin: 10px 0;
+        }
+        .overlay {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.5);
+            z-index: 999;
+        }
+
+        @media (max-width: 768px) {
+            .column {
+                width: 48%;
+            }
+        }
+        @media (max-width: 480px) {
+            .column {
+                width: 98%;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Správce úkolů</h1>
+        <div class="board">
+            <div class="column">
+                <h2>Čekající</h2>
+                {% for task in tasks_ready %}
+                <div class="task" onclick="showPopup('{{ task.nazev }}', '{{ task.get_status_display }}', '{{ task.get_priority_display }}', '{{ task.due_date }}', '{{ task.project.nazev }}', '{{ task.category.nazev }}')">
+                    <span class="label label-{{ task.category|slugify }}">{{ task.category.nazev }}</span>
+                    <h3>{{ task.nazev }}</h3>
+                    <p>{{ task.project.nazev }}</p>
+                </div>
+                {% endfor %}
+            </div>
+            <div class="column">
+                <h2>V průběhu</h2>
+                {% for task in tasks_in_progress %}
+                <div class="task" onclick="showPopup('{{ task.nazev }}', '{{ task.get_status_display }}', '{{ task.get_priority_display }}', '{{ task.due_date }}', '{{ task.project.nazev }}', '{{ task.category.nazev }}')">
+                    <span class="label label-{{ task.category|slugify }}">{{ task.category.nazev }}</span>
+                    <h3>{{ task.nazev }}</h3>
+                    <p>{{ task.project.nazev }}</p>
+                </div>
+                {% endfor %}
+            </div>
+            <div class="column">
+                <h2>Dokončeno</h2>
+                {% for task in tasks_done %}
+                <div class="task" onclick="showPopup('{{ task.nazev }}', '{{ task.get_status_display }}', '{{ task.get_priority_display }}', '{{ task.due_date }}', '{{ task.project.nazev }}', '{{ task.category.nazev }}')">
+                    <span class="label label-{{ task.category|slugify }}">{{ task.category.nazev }}</span>
+                    <h3>{{ task.nazev }}</h3>
+                    <p>{{ task.project.nazev }}</p>
+                </div>
+                {% endfor %}
+            </div>
+        </div>
+    </div>
+    
+    <div class="overlay" id="overlay" onclick="hidePopup()"></div>
+    <div class="popup" id="popup">
+        <div class="popup-header">
+            <h2 id="popup-task-name"></h2>
+            <span class="popup-close" onclick="hidePopup()">×</span>
+        </div>
+        <div class="popup-content">
+            <p id="popup-status"></p>
+            <p id="popup-priority"></p>
+            <p id="popup-due-date"></p>
+            <p id="popup-project"></p>
+            <p id="popup-category"></p>
+        </div>
+    </div>
+
+    <script>
+        function showPopup(taskName, status, priority, dueDate, project, category) {
+            document.getElementById('popup-task-name').innerText = taskName;
+            document.getElementById('popup-status').innerText = 'Stav: ' + status;
+            document.getElementById('popup-priority').innerText = 'Priorita: ' + priority;
+            document.getElementById('popup-due-date').innerText = 'Termín: ' + dueDate;
+            document.getElementById('popup-project').innerText = 'Projekt: ' + project;
+            document.getElementById('popup-category').innerText = 'Kategorie: ' + category;
+            document.getElementById('popup').style.display = 'block';
+            document.getElementById('overlay').style.display = 'block';
+        }
+
+        function hidePopup() {
+            document.getElementById('popup').style.display = 'none';
+            document.getElementById('overlay').style.display = 'none';
+        }
+    </script>
+</body>
+</html>

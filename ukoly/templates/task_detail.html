@@ -1,0 +1,17 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Task Detail</title>
+</head>
+<body>
+    <h1>{{ task.nazev }}</h1>
+    <p>Status: {{ task.get_status_display }}</p>
+    <p>Priority: {{ task.get_priority_display }}</p>
+    <p>Due Date: {{ task.due_date }}</p>
+    <p>Project: {{ task.project.nazev }}</p>
+    <p>Category: {{ task.category.nazev }}</p>
+    <p>Description: {{ task.popis }}</p>
+</body>
+</html>
